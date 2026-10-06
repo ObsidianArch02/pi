@@ -368,11 +368,12 @@ function prepareCodemodeLoadout(loadout: ToolLoadout, options: CodemodeToolOptio
 		),
 		inlineBudget: options.getInlineBudget?.() ?? DEFAULT_CODEMODE_INLINE_BUDGET,
 	});
-	const declaredNames = new Set(loadout.declared.map((tool) => tool.name));
 	return {
 		descriptions,
 		hiddenDeclarations:
-			mode === "only" ? callable.filter((tool) => declaredNames.has(tool.name)).map((tool) => tool.name) : [],
+			mode === "only"
+				? loadout.declared.filter((tool) => callableNames.has(tool.name)).map((tool) => tool.name)
+				: [],
 	};
 }
 
