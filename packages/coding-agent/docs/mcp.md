@@ -193,7 +193,7 @@ Each server tool is registered as `mcp__<server>__<tool>`. The server's `exposur
 | Exposure | Behavior | Typical use |
 |---|---|---|
 | `codemode` (default) | Callable from [`codemode`](cli.md#tools) scripts, but neither declared to the model nor listed in the codemode description. Scripts find tools with `searchTools()`, `describeTool()`, or `ALL_TOOLS`. | General MCP servers, especially when scripts should combine or filter calls. |
-| `deferred` | Not declared until [`tool_search`](cli.md#tools) loads a match for the next model call. | Large servers whose tools should be called directly after discovery. |
+| `deferred` | Not declared until [`tool_search`](cli.md#tools) loads a match for the next model call. With `codemode.mode: "only"`, loaded tools are called through codemode scripts. | Large servers whose tools should be called directly after discovery when codemode-only execution is not active. |
 | `direct` | Declared to the model like a built-in tool and also callable from codemode. | Small, frequently used tool sets. |
 | `hidden` | Registered but unreachable. | Servers or tools that should remain unavailable. |
 
@@ -223,7 +223,7 @@ Pi activates `codemode` when a server with `codemode` exposure connects. It acti
 
 `pi mcp list` marks tools whose exposure differs from their server. The Tools view in `/mcp` also shows the effective exposure.
 
-Tools with `codemode` or `deferred` exposure can be reached through either indirect mechanism: codemode scripts can call them, and `tool_search` can load them. Codemode calls do not depend on the active tool set, so they remain available after `/tree`, resume, and fork. Tools loaded by `tool_search` are recorded in the transcript and remain declared on that branch.
+Tools with `codemode` or `deferred` exposure can be reached through either indirect mechanism: codemode scripts can call them, and `tool_search` can load them. Codemode calls do not depend on the active tool set, so they remain available after `/tree`, resume, and fork. Tools loaded by `tool_search` are recorded in the transcript; with codemode in `only` mode they remain script-only on that branch.
 
 `--tools` does not remove MCP tools unless one of its entries starts with `mcp__`; `pi --tools read,codemode,'mcp__radius__*'` keeps only the tools of `radius`. `--exclude-tools` accepts the same patterns, and `--no-mcp` disables MCP for one run (see [Tools](cli.md#mcp-tools)).
 

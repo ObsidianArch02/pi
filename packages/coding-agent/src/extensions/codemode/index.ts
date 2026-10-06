@@ -6,9 +6,10 @@
  * `setActiveTools()`; the MCP extension activates it when MCP tools are only reachable from scripts.
  */
 
+import { toCodemodeIdentifier } from "@earendil-works/pi-codemode/declarations";
 import type { ExtensionAPI, ExtensionFactory } from "../../core/extensions/types.ts";
 import type { CodemodeMode } from "../../core/settings-manager.ts";
-import { createCodemodeToolDefinition } from "./tool.ts";
+import { CODEMODE_TOOL_NAME, createCodemodeToolDefinition, isCodemodeTool } from "./tool.ts";
 
 export interface CodemodeExtensionOptions {
 	/** Overrides the `codemode.mode` setting. */
@@ -30,6 +31,7 @@ function readInlineBudget(pi: ExtensionAPI): number | undefined {
 
 export function createCodemodeExtension(options: CodemodeExtensionOptions = {}): ExtensionFactory {
 	return (pi) => {
+		const getMode = () => options.mode ?? readMode(pi);
 		pi.registerTool({
 			...createCodemodeToolDefinition({
 				appendEntry: (customType, data) => pi.appendEntry(customType, data),
@@ -37,10 +39,29 @@ export function createCodemodeExtension(options: CodemodeExtensionOptions = {}):
 				getToolNamespace: (name) => pi.getAllTools().find((tool) => tool.name === name)?.namespace,
 				getToolGuidelines: () =>
 					new Map(pi.getAllTools().map((tool) => [tool.name, tool.promptGuidelines ?? []] as const)),
-				getMode: () => options.mode ?? readMode(pi),
+				getMode,
 				getInlineBudget: () => options.inlineBudget ?? readInlineBudget(pi),
 			}),
 			defaultActive: false,
+		});
+
+		// In `only`, model-issued calls must use codemode. Nested calls from any
+		// model-only orchestrator still run through the normal tool pipeline.
+		pi.on("tool_call", (event) => {
+			if (
+				event.parentToolCallId !== undefined ||
+				getMode() !== "only" ||
+				!pi.getActiveTools().includes(CODEMODE_TOOL_NAME)
+			) {
+				return;
+			}
+			const tools = pi.getAllTools();
+			const tool = tools.find((candidate) => candidate.name === event.toolName);
+			if (!tools.some(isCodemodeTool) || tool?.exposure === "model-only") return;
+			return {
+				block: true,
+				reason: `Tool ${event.toolName} is only callable through codemode. Use tools.${toCodemodeIdentifier(event.toolName)}(...) in a codemode script.`,
+			};
 		});
 	};
 }

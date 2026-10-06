@@ -153,7 +153,7 @@ Built-in extensions add two more tools. They are off by default; the MCP extensi
 | Built-in extension | Purpose |
 |---|---|
 | `codemode` | Run JavaScript that calls the other tools, for example in parallel with `Promise.allSettled`; only the script's output reaches the model |
-| `tool_search` | Search tools that are not declared to the model (`codemode` and `deferred` exposure, such as MCP tools) and declare the matches for the next call |
+| `tool_search` | Search tools that are not declared to the model (`codemode` and `deferred` exposure, such as MCP tools) and make matches available for the next call; codemode `only` keeps them script-only |
 
 ### Enable codemode
 
@@ -179,7 +179,7 @@ Scripts run in a QuickJS sandbox and reach the other tools through `tools.<name>
 
 ### Tool search
 
-`tool_search` is off by default; enable it with `"defaultTools": ["+tool_search"]` or `--tools`. It uses the same ranking as `searchTools()` over tools that are not declared yet and declares the matches for the next model call. Loaded tools are recorded in the session like other tool changes, so they stay declared on that branch.
+`tool_search` is off by default; enable it with `"defaultTools": ["+tool_search"]` or `--tools`. It uses the same ranking as `searchTools()` over tools that are not declared yet and makes the matches available for the next model call. With codemode in `only` mode, the matches remain callable through codemode scripts and direct model calls are blocked. Loaded tools are recorded in the session like other tool changes, so they stay active on that branch.
 
 <a id="resource-options"></a>
 

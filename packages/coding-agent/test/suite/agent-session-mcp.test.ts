@@ -959,7 +959,7 @@ return { docs, sameForAliases: aliases.every((alias) => JSON.stringify(alias) ==
 
 		const search = toolResult(harness, "tool_search");
 		expect(getMessageText(search)).toBe(
-			`Loaded 1 tool. They are available from your next call:\n- ${searchName}: Search the docs.`,
+			`Loaded 1 tool. When codemode is in only mode, call them from a codemode script; otherwise they are available from your next call:\n- ${searchName}: Search the docs.`,
 		);
 		// Only the loaded tool is added; earlier declarations are not repeated.
 		const loadMessages = harness.session.messages.filter(

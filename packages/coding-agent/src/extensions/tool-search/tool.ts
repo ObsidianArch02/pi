@@ -3,9 +3,10 @@
  * the optional `tool_search` tool.
  *
  * `tool_search` searches tools that are not declared to
- * the model (`codemode` and `deferred` exposure) and loads the matches, so they are declared for the
- * next model call. Loading goes through the active tool set, so it is recorded in the transcript
- * like any other tool change and survives `/tree`, resume, and fork on that branch.
+ * the model (`codemode` and `deferred` exposure) and loads the matches for the next model call.
+ * When codemode `only` is active, loaded tools remain reachable through codemode scripts and are
+ * not directly executable by the model. Loading goes through the active tool set, so it is recorded
+ * in the transcript like any other tool change and survives `/tree`, resume, and fork on that branch.
  */
 
 import { type Static, Type } from "typebox";
@@ -183,7 +184,8 @@ export interface ToolSearchToolDetails {
 export interface ToolSearchToolOptions {
 	/**
 	 * The session's tools. `tool_search` searches the tools that are not declared to the model and
-	 * activates the matches. Without it, the tool finds nothing. An `ExtensionAPI` fits.
+	 * activates the matches. Without it, the tool finds nothing. An `ExtensionAPI` fits. In codemode
+	 * `only`, the matches stay hidden from direct model execution and are reached through scripts.
 	 */
 	tools?: Pick<ExtensionAPI, "getAllTools" | "getActiveTools" | "setActiveTools">;
 }
@@ -194,8 +196,9 @@ function isSearchable(exposure: ToolExposure): boolean {
 }
 
 /**
- * Rank the searchable tools that are not active yet and activate the matches, so the next model
- * call declares them. Activation is recorded in the transcript like any tool change.
+ * Rank the searchable tools that are not active yet and activate the matches. In codemode `only`,
+ * the loadout hides the matches from direct model execution. Activation is recorded in the
+ * transcript like any tool change.
  */
 function searchAndLoad(
 	tools: NonNullable<ToolSearchToolOptions["tools"]>,
@@ -217,7 +220,7 @@ function searchAndLoad(
  * The `tool_search` description. It does not list the searchable tools or their namespaces, so it
  * stays the same while tools are registered, for example when MCP servers connect.
  */
-export const TOOL_SEARCH_DESCRIPTION = `# Tool discovery\n\nSearches over deferred tool metadata with BM25 and exposes matching tools for the next model call.\n\nSome of the tools, such as tools of MCP servers, may not have been provided to you upfront, and you should use this tool (\`${TOOL_SEARCH_TOOL_NAME}\`) to search for the required tools. For MCP tool discovery, always use \`${TOOL_SEARCH_TOOL_NAME}\`.`;
+export const TOOL_SEARCH_DESCRIPTION = `# Tool discovery\n\nSearches over deferred tool metadata with BM25 and exposes matching tools for the next model call. When codemode is in only mode, call loaded tools from a codemode script.\n\nSome of the tools, such as tools of MCP servers, may not have been provided to you upfront, and you should use this tool (\`${TOOL_SEARCH_TOOL_NAME}\`) to search for the required tools. For MCP tool discovery, always use \`${TOOL_SEARCH_TOOL_NAME}\`.`;
 
 export function createToolSearchToolDefinition(
 	options: ToolSearchToolOptions = {},
@@ -238,7 +241,7 @@ export function createToolSearchToolDefinition(
 			const text =
 				tools.length === 0
 					? "No matching tools found."
-					: `Loaded ${tools.length} tool${tools.length === 1 ? "" : "s"}. They are available from your next call:\n${tools
+					: `Loaded ${tools.length} tool${tools.length === 1 ? "" : "s"}. When codemode is in only mode, call them from a codemode script; otherwise they are available from your next call:\n${tools
 							.map((tool) => `- ${tool.name}: ${tool.description.trim().split(/\r?\n/)[0]}`)
 							.join("\n")}`;
 			return { content: [{ type: "text", text }], details: { loaded: tools.map((tool) => tool.name) } };

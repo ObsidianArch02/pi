@@ -332,7 +332,8 @@ function describeScriptCall(tool: AgentTool<any>): string {
  * - `on`: their descriptions say how scripts call them, and the codemode description
  *   lists only the callable tools without `direct` exposure.
  * - `only`: the codemode description lists every callable tool, and requests leave out the
- *   declarations of active `direct` tools.
+ *   declarations of every active tool callable from scripts. Only `model-only` tools remain
+ *   directly declared to the model.
  *
  * Listed tools carry their prompt guidelines, which the system prompt only has for declared tools.
  *
@@ -371,9 +372,7 @@ function prepareCodemodeLoadout(loadout: ToolLoadout, options: CodemodeToolOptio
 	return {
 		descriptions,
 		hiddenDeclarations:
-			mode === "only"
-				? callable.filter((tool) => isDirect(tool) && declaredNames.has(tool.name)).map((tool) => tool.name)
-				: [],
+			mode === "only" ? callable.filter((tool) => declaredNames.has(tool.name)).map((tool) => tool.name) : [],
 	};
 }
 

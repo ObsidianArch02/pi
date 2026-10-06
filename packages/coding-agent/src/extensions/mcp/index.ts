@@ -10,8 +10,9 @@
  * callable from codemode scripts, which keeps MCP tools out of the model's tool declarations and
  * the codemode description: scripts find the tools with `searchTools()` and the server instructions
  * with `describeNamespace()`. The codemode tool is activated for that unless `autoEnableCodemode` is
- * false. `"deferred"` declares the tools to the model once the `tool_search` tool loads them, and
- * activates `tool_search` instead of codemode.
+ * false. `"deferred"` makes the tools available after `tool_search` loads them; with codemode in
+ * `only` mode they remain reachable through codemode scripts, and otherwise they are declared to
+ * the model for the next call. It activates `tool_search` instead of codemode.
  * `"exposure": "direct"` declares them to the model right away, and `"hidden"` makes them
  * unreachable. `toolExposure` overrides the exposure of single tools. Servers with resources are
  * reached through Codex's `list_mcp_resources`, `list_mcp_resource_templates`, and
@@ -112,7 +113,7 @@ interface McpServer {
 
 const EXPOSURE_DESCRIPTIONS: Record<Exclude<McpExposure, "hidden">, string> = {
 	codemode: "called from codemode scripts, which find them with searchTools()",
-	deferred: "not declared until tool_search loads them, then called directly; no codemode needed",
+	deferred: "not declared until tool_search loads them; use codemode when codemode is in only mode",
 	direct: "declared to the model like built-in tools",
 };
 
